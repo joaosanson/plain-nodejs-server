@@ -1,23 +1,14 @@
 import http from 'node:http'
 import { env } from 'node:process'
 import { DEFAULT_HEADER } from './util/utils.js'
+import { json } from './middlewares/json.js'
 
 const tasks = []
 
 const server = http.createServer(async (req, res) => {
   const { method, url } = req
 
-  const buffers = []
-
-  for await (const chunk of req) {
-    buffers.push(chunk)
-  }
-
-  try {
-    req.body = JSON.parse(Buffer.concat(buffers).toString())
-  } catch {
-    req.body = null
-  }
+  await json(req, res)
 
   if (method === 'GET' && url === '/tasks') {
     return res.end(JSON.stringify(tasks))
@@ -27,7 +18,7 @@ const server = http.createServer(async (req, res) => {
     console.log(req.body)
   }
 
-  res.writeHead(404, DEFAULT_HEADER)
+  res.writeHead(404)
   res.write(JSON.stringify('oops, not found!'))
   return res.end()
 })
