@@ -1,9 +1,9 @@
 import http from 'node:http'
 import { env } from 'node:process'
-import { DEFAULT_HEADER } from './util/utils.js'
 import { json } from './middlewares/json.js'
+import { Database } from './database.js'
 
-const tasks = []
+const database = new Database()
 
 const server = http.createServer(async (req, res) => {
   const { method, url } = req
@@ -11,11 +11,25 @@ const server = http.createServer(async (req, res) => {
   await json(req, res)
 
   if (method === 'GET' && url === '/tasks') {
+    const tasks = database.select('tasks')
     return res.end(JSON.stringify(tasks))
   }
 
   if (method === 'POST' && url === '/tasks') {
-    console.log(req.body)
+    const { title, description, completed_at, created_at, updated_at } =
+      req.body
+
+    const task = {
+      id: 1,
+      title,
+      description,
+      completed_at,
+      created_at,
+      updated_at,
+    }
+
+    database.insert('tasks', task)
+    return res.writeHead(201).end()
   }
 
   res.writeHead(404)
