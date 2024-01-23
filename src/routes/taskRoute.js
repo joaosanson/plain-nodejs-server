@@ -3,6 +3,8 @@ import { randomUUID } from 'node:crypto'
 
 const database = new Database()
 
+const currentDate = new Date()
+
 export const routes = [
   {
     method: 'GET',
@@ -16,19 +18,25 @@ export const routes = [
     method: 'POST',
     path: '/tasks',
     handler: (req, res) => {
-      const { title, description, completed_at, created_at, updated_at } =
-        req.body
+      const { title, description } = req.body
 
       const task = {
         id: randomUUID(),
         title,
         description,
-        completed_at,
-        created_at,
-        updated_at,
+        completed_at: null,
+        created_at: currentDate,
+        updated_at: currentDate,
       }
 
       database.insert('tasks', task)
+      return res.writeHead(201).end()
+    },
+  },
+  {
+    method: 'DELETE',
+    path: '/tasks/',
+    handler: (req, res) => {
       return res.writeHead(201).end()
     },
   },
