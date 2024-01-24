@@ -4,8 +4,6 @@ import { buildRoutePath } from '../utils/build-route-path.js'
 
 const database = new Database()
 
-const currentDate = new Date()
-
 export const routes = [
   {
     method: 'GET',
@@ -25,9 +23,6 @@ export const routes = [
         id: randomUUID(),
         title,
         description,
-        completed_at: null,
-        created_at: currentDate,
-        updated_at: currentDate,
       }
 
       database.insert('tasks', task)
@@ -35,10 +30,32 @@ export const routes = [
     },
   },
   {
+    method: 'PUT',
+    path: buildRoutePath('/tasks/:id'),
+    handler: (req, res) => {
+      const { id } = req.params
+      const { title, description } = req.body
+
+      const task = {
+        id,
+        title,
+        description,
+      }
+
+      database.update('tasks', id, task)
+
+      return res.writeHead(204).end()
+    },
+  },
+  {
     method: 'DELETE',
     path: buildRoutePath('/tasks/:id'),
     handler: (req, res) => {
-      return res.writeHead(201).end()
+      const { id } = req.params
+
+      database.delete('tasks', id)
+
+      return res.writeHead(204).end()
     },
   },
 ]
