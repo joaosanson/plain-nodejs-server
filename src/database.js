@@ -58,9 +58,27 @@ export class Database {
         updated_at: currentDate,
         ...data,
       }
+      this.#persist()
+    } else {
+      throw new Error('Id not found')
     }
-    this.#persist()
     return data
+  }
+
+  patch(table, id) {
+    const rowIndex = this.#database[table].findIndex((row) => row.id === id)
+
+    if (rowIndex > -1) {
+      this.#database[table][rowIndex] = {
+        ...this.#database[table][rowIndex],
+        updated_at: currentDate,
+        completed_at: currentDate,
+      }
+      this.#persist()
+    } else {
+      throw new Error('Id not found')
+    }
+    return table
   }
 
   delete(table, id) {
@@ -69,6 +87,9 @@ export class Database {
     if (rowIndex > -1) {
       this.#database[table].splice(rowIndex, 1)
       this.#persist()
+    } else {
+      throw new Error('Id not found')
     }
+    return table
   }
 }
