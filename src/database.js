@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises'
 
 const databasePath = new URL('../database/db.json', import.meta.url)
+const databaseDir = new URL('../database/', import.meta.url)
 
 const currentDate = new Date()
 
@@ -13,6 +14,7 @@ export class Database {
         this.#database = JSON.parse(data)
       })
       .catch(() => {
+        fs.mkdir(databaseDir, { recursive: true })
         this.#persist()
       })
   }
