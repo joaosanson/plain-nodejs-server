@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises'
 
 const databasePath = new URL('../database/db.json', import.meta.url)
+const databaseDir = new URL('../database/', import.meta.url)
 
 const currentDate = new Date()
 
@@ -13,6 +14,7 @@ export class Database {
         this.#database = JSON.parse(data)
       })
       .catch(() => {
+        fs.mkdir(databaseDir, { recursive: true })
         this.#persist()
       })
   }
@@ -21,8 +23,16 @@ export class Database {
     fs.writeFile(databasePath, JSON.stringify(this.#database))
   }
 
-  select(table) {
-    const data = this.#database[table] ?? []
+  select(table, search) {
+    let data = this.#database[table] ?? []
+
+    if (search) {
+      data = data.filter((row) => {
+        return Object.entries(search).some(([key, value]) => {
+          return row[key].includes(value)
+        })
+      })
+    }
 
     return data
   }

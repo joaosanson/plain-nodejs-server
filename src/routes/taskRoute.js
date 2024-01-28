@@ -9,7 +9,17 @@ export const routes = [
     method: 'GET',
     path: buildRoutePath('/tasks'),
     handler: (req, res) => {
-      const tasks = database.select('tasks')
+      const { search } = req.query
+
+      const tasks = database.select(
+        'tasks',
+        search
+          ? {
+              title: search,
+              description: search,
+            }
+          : null,
+      )
       return res.end(JSON.stringify(tasks))
     },
   },
@@ -17,15 +27,28 @@ export const routes = [
     method: 'POST',
     path: buildRoutePath('/tasks'),
     handler: (req, res) => {
-      const { title, description } = req.body
+      try {
+        const { title, description } = req.body
 
-      const task = {
-        id: randomUUID(),
-        title,
-        description,
+        const task = {
+          id: randomUUID(),
+          title,
+          description,
+        }
+
+        database.insert('tasks', task)
+      } catch ({ name, message }) {
+        if (name === 'TypeError') {
+          res.writeHead(404)
+          res.write(JSON.stringify('oops, missing title or description'))
+          return res.end()
+        }
+        console.log(name)
+        console.log(message)
+        res.writeHead(404)
+        return res.end()
       }
 
-      database.insert('tasks', task)
       return res.writeHead(201).end()
     },
   },
@@ -34,15 +57,57 @@ export const routes = [
     path: buildRoutePath('/tasks/:id'),
     handler: (req, res) => {
       const { id } = req.params
-      const { title, description } = req.body
 
-      const task = {
-        id,
-        title,
-        description,
+      try {
+        const { title, description } = req.body
+
+        const task = {
+          id,
+          title,
+          description,
+        }
+
+        try {
+          database.update('tasks', id, task)
+        } catch ({ name, message }) {
+          if (message === 'Id not found') {
+            res.writeHead(404)
+            res.write(JSON.stringify('oops, id not found'))
+            return res.end()
+          } else {
+            throw new Error(name, message)
+          }
+        }
+
+        return res.writeHead(204).end()
+      } catch ({ name, message }) {
+        if (name === 'TypeError') {
+          res.writeHead(404)
+          res.write(JSON.stringify('oops, title or description'))
+          res.end()
+        } else {
+          throw new Error(name, message)
+        }
       }
+    },
+  },
+  {
+    method: 'PATCH',
+    path: buildRoutePath('/tasks/:id/complete'),
+    handler: (req, res) => {
+      const { id } = req.params
 
-      database.update('tasks', id, task)
+      try {
+        database.patch('tasks', id)
+      } catch ({ name, message }) {
+        if (message === 'Id not found') {
+          res.writeHead(404)
+          res.write(JSON.stringify('oops, id not found'))
+          return res.end()
+        } else {
+          throw new Error(name, message)
+        }
+      }
 
       return res.writeHead(204).end()
     },
@@ -53,7 +118,17 @@ export const routes = [
     handler: (req, res) => {
       const { id } = req.params
 
-      database.delete('tasks', id)
+      try {
+        database.delete('tasks', id)
+      } catch ({ name, message }) {
+        if (message === 'Id not found') {
+          res.writeHead(404)
+          res.write(JSON.stringify('oops, id not found'))
+          return res.end()
+        } else {
+          throw new Error(name, message)
+        }
+      }
 
       return res.writeHead(204).end()
     },
